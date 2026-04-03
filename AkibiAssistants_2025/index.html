@@ -6,23 +6,51 @@
   <title>inFlux</title>
   <link rel="icon" href="image/favicon.jpg" type="image/jpeg">
   <style>
-    body {
+    html, body {
       margin: 0;
-      padding: 40px 20px;
+      padding: 0;
+      height: 100%;
+    }
+    #pdf-frame {
+      display: block;
+      width: 100%;
+      height: 100vh;
+      border: none;
+    }
+    #mobile-link {
+      display: none;
+      min-height: 100vh;
+      box-sizing: border-box;
+      padding: 24px;
       font-family: sans-serif;
       text-align: center;
     }
-    a {
+    #mobile-link a {
       display: inline-block;
+      margin-top: 24px;
       padding: 12px 20px;
       border: 1px solid #000;
       border-radius: 8px;
       text-decoration: none;
       color: #000;
     }
+
+    @media (max-width: 768px) {
+      #pdf-frame {
+        display: none;
+      }
+      #mobile-link {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
-  <a href="document.pdf" target="_blank" rel="noopener noreferrer">PDFを開く</a>
+  <iframe id="pdf-frame" src="document.pdf"></iframe>
+
+  <div id="mobile-link">
+    <p>スマートフォンでは埋め込み表示が不安定なため、PDFを別画面で開いてください。</p>
+    <a href="document.pdf" target="_blank" rel="noopener noreferrer">PDFを開く</a>
+  </div>
 </body>
 </html>
