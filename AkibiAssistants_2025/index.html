@@ -1,131 +1,94 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>inFlux</title>
-  <link rel="icon" href="image/favicon.jpg" type="image/jpeg" />
-
+  <link rel="icon" href="image/favicon.jpg" type="image/jpeg">
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      background: #ffffff;
-    }
-
-    body {
-      font-family: sans-serif;
+      background: #fff;
     }
 
     #pdf-container {
       width: 100%;
       max-width: 1000px;
       margin: 0 auto;
-      box-sizing: border-box;
-      padding: 0;
-    }
-
-    .page-wrap {
-      width: 100%;
-      margin: 0 0 20px 0;
     }
 
     canvas {
       display: block;
       width: 100%;
       height: auto;
+      margin: 0 auto 16px;
     }
 
-    #loading,
-    #error {
+    #message {
+      padding: 24px;
       text-align: center;
-      padding: 24px 16px;
-      font-size: 14px;
-      line-height: 1.7;
-    }
-
-    #error {
+      font-family: sans-serif;
       display: none;
     }
 
-    #error a {
+    #message a {
       color: inherit;
     }
   </style>
 </head>
 <body>
-  <div id="loading">PDFを読み込んでいます…</div>
-  <div id="error">
-    PDFを表示できませんでした。<br />
-    <a href="document.pdf" target="_blank" rel="noopener noreferrer">PDFを直接開く</a>
-  </div>
   <div id="pdf-container"></div>
+  <div id="message">
+    PDFを表示できませんでした。<a href="document.pdf" target="_blank" rel="noopener noreferrer">こちらから開いてください</a>
+  </div>
 
   <script type="module">
-    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.6.205/pdf.min.mjs";
+    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
 
     pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.6.205/pdf.worker.min.mjs";
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
 
-    const PDF_URL = "document.pdf";
     const container = document.getElementById("pdf-container");
-    const loading = document.getElementById("loading");
-    const errorBox = document.getElementById("error");
+    const message = document.getElementById("message");
 
-    async function renderPage(pdf, pageNumber) {
-      const page = await pdf.getPage(pageNumber);
-
-      const baseViewport = page.getViewport({ scale: 1 });
-      const maxWidth = Math.min(window.innerWidth, 1000);
-      const cssScale = maxWidth / baseViewport.width;
-      const viewport = page.getViewport({ scale: cssScale });
-
-      const deviceScale = window.devicePixelRatio || 1;
-
-      const wrap = document.createElement("div");
-      wrap.className = "page-wrap";
-
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d", { alpha: false });
-
-      canvas.width = Math.floor(viewport.width * deviceScale);
-      canvas.height = Math.floor(viewport.height * deviceScale);
-      canvas.style.width = `${Math.floor(viewport.width)}px`;
-      canvas.style.height = `${Math.floor(viewport.height)}px`;
-
-      context.setTransform(deviceScale, 0, 0, deviceScale, 0, 0);
-
-      wrap.appendChild(canvas);
-      container.appendChild(wrap);
-
-      await page.render({
-        canvasContext: context,
-        viewport: viewport
-      }).promise;
-    }
-
-    async function main() {
+    async function renderPDF() {
       try {
-        const loadingTask = pdfjsLib.getDocument({
-          url: PDF_URL,
-          useWorkerFetch: true
-        });
+        const pdf = await pdfjsLib.getDocument("document.pdf").promise;
 
-        const pdf = await loadingTask.promise;
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
 
-        loading.style.display = "none";
+          const unscaledViewport = page.getViewport({ scale: 1 });
+          const targetWidth = Math.min(window.innerWidth, 1000);
+          const scale = targetWidth / unscaledViewport.width;
+          const viewport = page.getViewport({ scale });
 
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-          await renderPage(pdf, pageNumber);
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+
+          const outputScale = window.devicePixelRatio || 1;
+          canvas.width = Math.floor(viewport.width * outputScale);
+          canvas.height = Math.floor(viewport.height * outputScale);
+          canvas.style.width = `${Math.floor(viewport.width)}px`;
+          canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+          context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+
+          container.appendChild(canvas);
+
+          await page.render({
+            canvasContext: context,
+            viewport
+          }).promise;
         }
-      } catch (err) {
-        console.error(err);
-        loading.style.display = "none";
-        errorBox.style.display = "block";
+      } catch (error) {
+        console.error(error);
+        message.style.display = "block";
       }
     }
 
-    main();
+    renderPDF();
   </script>
 </body>
 </html>
