@@ -6,89 +6,23 @@
   <title>inFlux</title>
   <link rel="icon" href="image/favicon.jpg" type="image/jpeg">
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      background: #fff;
-    }
-
-    #pdf-container {
-      width: 100%;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    canvas {
-      display: block;
-      width: 100%;
-      height: auto;
-      margin: 0 auto 16px;
-    }
-
-    #message {
-      padding: 24px;
-      text-align: center;
+      padding: 40px 20px;
       font-family: sans-serif;
-      display: none;
+      text-align: center;
     }
-
-    #message a {
-      color: inherit;
+    a {
+      display: inline-block;
+      padding: 12px 20px;
+      border: 1px solid #000;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #000;
     }
   </style>
 </head>
 <body>
-  <div id="pdf-container"></div>
-  <div id="message">
-    PDFを表示できませんでした。<a href="document.pdf" target="_blank" rel="noopener noreferrer">こちらから開いてください</a>
-  </div>
-
-  <script type="module">
-    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
-
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
-
-    const container = document.getElementById("pdf-container");
-    const message = document.getElementById("message");
-
-    async function renderPDF() {
-      try {
-        const pdf = await pdfjsLib.getDocument("document.pdf").promise;
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-
-          const unscaledViewport = page.getViewport({ scale: 1 });
-          const targetWidth = Math.min(window.innerWidth, 1000);
-          const scale = targetWidth / unscaledViewport.width;
-          const viewport = page.getViewport({ scale });
-
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-
-          const outputScale = window.devicePixelRatio || 1;
-          canvas.width = Math.floor(viewport.width * outputScale);
-          canvas.height = Math.floor(viewport.height * outputScale);
-          canvas.style.width = `${Math.floor(viewport.width)}px`;
-          canvas.style.height = `${Math.floor(viewport.height)}px`;
-
-          context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
-
-          container.appendChild(canvas);
-
-          await page.render({
-            canvasContext: context,
-            viewport
-          }).promise;
-        }
-      } catch (error) {
-        console.error(error);
-        message.style.display = "block";
-      }
-    }
-
-    renderPDF();
-  </script>
+  <a href="document.pdf" target="_blank" rel="noopener noreferrer">PDFを開く</a>
 </body>
 </html>
