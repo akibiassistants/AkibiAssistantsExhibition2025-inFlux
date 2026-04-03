@@ -5,52 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>inFlux</title>
   <link rel="icon" href="image/favicon.jpg" type="image/jpeg">
+
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-    #pdf-frame {
-      display: block;
-      width: 100%;
-      height: 100vh;
-      border: none;
-    }
-    #mobile-link {
-      display: none;
-      min-height: 100vh;
-      box-sizing: border-box;
-      padding: 24px;
-      font-family: sans-serif;
+      background: #fff;
       text-align: center;
     }
-    #mobile-link a {
-      display: inline-block;
-      margin-top: 24px;
-      padding: 12px 20px;
-      border: 1px solid #000;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #000;
-    }
-
-    @media (max-width: 768px) {
-      #pdf-frame {
-        display: none;
-      }
-      #mobile-link {
-        display: block;
-      }
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto 20px;
     }
   </style>
 </head>
-<body>
-  <iframe id="pdf-frame" src="document.pdf"></iframe>
 
-  <div id="mobile-link">
-    <p>スマートフォンでは埋め込み表示が不安定なため、PDFを別画面で開いてください。</p>
-    <a href="document.pdf" target="_blank" rel="noopener noreferrer">PDFを開く</a>
-  </div>
+<body>
+  <div id="pdf-container"></div>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+
+  <script type="module">
+    const url = "document.pdf";
+
+    const pdfjsLib = globalThis['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+
+    const pdf = await pdfjsLib.getDocument(url).promise;
+
+    const container = document.getElementById("pdf-container");
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+
+      const scale = 1.5;
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      container.appendChild(canvas);
+
+      await page.render({
+        canvasContext: context,
+        viewport: viewport
+      }).promise;
+    }
+  </script>
 </body>
 </html>
